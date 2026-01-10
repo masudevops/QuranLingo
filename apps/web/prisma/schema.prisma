@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("USER")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Gamification
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  streak        Int       @default(0)
+  lastActivity  DateTime?
+
+  // Relations
+  progress      Progress[]
+  wordMastery   WordMastery[]
+  certificates  Certificate[]
+}
+
+
+
+// Curriculum
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  units       Unit[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Unit {
+  id       String   @id @default(cuid())
+  courseId String
+  title    String
+  order    Int
+  course   Course   @relation(fields: [courseId], references: [id])
+  lessons  Lesson[]
+}
+
+model Lesson {
+  id        String     @id @default(cuid())
+  unitId    String
+  title     String
+  order     Int
+  unit      Unit       @relation(fields: [unitId], references: [id])
+  exercises Exercise[]
+  progress  Progress[]
+}
+
+model Exercise {
+  id        String   @id @default(cuid())
+  lessonId  String
+  type      String   // MCQ, MATCH, READ, TAP
+  content   String   // Structure depends on type (JSON stringified)
+  difficulty Int     @default(1)
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+}
+
+// Progress
+model Progress {
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String
+  score     Int
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model WordMastery {
+  id        String   @id @default(cuid())
+  userId    String
+  word      String   // The Arabic word
+  strength  Int      @default(0) // 0-100
+  nextReview DateTime?
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, word])
+}
+
+// Certificates
+model Certificate {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  issuedAt  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// Caching
+model CachedSurah {
+  number      Int     @id
+  name        String
+  englishName String
+  ayahs       CachedAyah[]
+}
+
+model CachedAyah {
+  id        Int    @id @default(autoincrement())
+  surahId   Int
+  number    Int    // Ayah number in Surah
+  text      String
+  translation String?
+  surah     CachedSurah @relation(fields: [surahId], references: [number])
+  words     CachedWord[]
+  
+  @@unique([surahId, number])
+}
+
+model CachedWord {
+  id           Int    @id @default(autoincrement())
+  ayahId       Int
+  position     Int
+  text         String
+  translation  String?
+  transliteration String?
+  ayah         CachedAyah @relation(fields: [ayahId], references: [id])
+}
