@@ -1,48 +1,73 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSurahDetails, Ayah, Word } from '../services/quran';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import Skeleton from '../components/Skeleton';
+import ErrorState from '../components/ErrorState';
+import { useFonts, Amiri_400Regular, Amiri_700Bold } from '@expo-google-fonts/amiri';
 
 export default function ReadScreen({ route, navigation }: any) {
     const { surahId = 1 } = route.params || {};
-    // State to toggle translation view
     const [showTranslation, setShowTranslation] = useState(true);
 
-    const { data, isLoading, error } = useQuery({
-        queryKey: ['surah', surahId],
-        queryFn: () => fetchSurahDetails(surahId),
+    let [fontsLoaded] = useFonts({
+        Amiri_400Regular,
+        Amiri_700Bold,
     });
 
-    if (isLoading) {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['surah', surahId],
+        queryFn: () => fetchSurahDetails(surahId),
+        staleTime: 1000 * 60 * 10, // 10 minutes
+    });
+
+    if (isLoading || !fontsLoaded) {
         return (
-            <View style={styles.center}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <Skeleton width={60} height={20} />
+                    <Skeleton width={120} height={24} />
+                    <Skeleton width={60} height={20} />
+                </View>
+                <View style={styles.skeletonContent}>
+                    {[1, 2, 3].map((i) => (
+                        <View key={i} style={styles.skeletonAyah}>
+                            <Skeleton width="100%" height={80} style={{ marginBottom: SPACING.sm }} />
+                            <Skeleton width="90%" height={40} />
+                        </View>
+                    ))}
+                </View>
+            </SafeAreaView>
         );
     }
 
     if (error) {
         return (
-            <View style={styles.center}>
-                <Text>Error loading Surah</Text>
-            </View>
+            <SafeAreaView style={styles.container}>
+                <ErrorState
+                    title="Can't Load Surah"
+                    message="Check your internet connection and try again."
+                    onRetry={() => refetch()}
+                />
+            </SafeAreaView>
         );
     }
 
     const renderWord = (word: Word) => (
-        <View key={word.id} style={styles.wordContainer}>
+        <TouchableOpacity key={word.id} style={styles.wordContainer}>
             <Text style={styles.arabicWord}>{word.text}</Text>
             {showTranslation && (
                 <Text style={styles.translationWord}>{word.translation}</Text>
             )}
-        </View>
+        </TouchableOpacity>
     );
 
     const renderAyah = ({ item }: { item: Ayah }) => (
-        <View style={styles.ayahContainer}>
+        <View style={styles.ayahCard}>
             <View style={styles.ayahHeader}>
-                <View style={styles.circle}>
+                <View style={styles.ayahBadge}>
                     <Text style={styles.ayahNumber}>{item.number}</Text>
                 </View>
             </View>
@@ -61,7 +86,7 @@ export default function ReadScreen({ route, navigation }: any) {
                 </TouchableOpacity>
                 <Text style={styles.title}>Surah Al-Fatihah</Text>
                 <TouchableOpacity onPress={() => setShowTranslation(!showTranslation)}>
-                    <Text style={styles.toggleText}>{showTranslation ? "Hide EN" : "Show EN"}</Text>
+                    <Text style={styles.toggleText}>{showTranslation ? "Hide" : "Show"}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -78,86 +103,96 @@ export default function ReadScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-    },
-    center: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        padding: SPACING.md,
+        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderColor: '#eee',
+        borderColor: COLORS.gray200,
+        ...SHADOWS.sm,
     },
     backButton: {
-        padding: 8,
+        padding: SPACING.xs,
     },
     backText: {
         fontSize: 16,
-        color: '#2563eb',
+        fontWeight: '600',
+        color: COLORS.primary,
     },
     title: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '700',
+        color: COLORS.slate800,
     },
     toggleText: {
         fontSize: 14,
-        color: '#2563eb',
+        fontWeight: '600',
+        color: COLORS.primary,
+    },
+    skeletonContent: {
+        padding: SPACING.lg,
+    },
+    skeletonAyah: {
+        marginBottom: SPACING.xl,
     },
     listContent: {
-        padding: 16,
+        padding: SPACING.lg,
     },
-    ayahContainer: {
-        marginBottom: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-        paddingBottom: 16,
+    ayahCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: RADIUS.lg,
+        padding: SPACING.lg,
+        marginBottom: SPACING.md,
+        ...SHADOWS.sm,
     },
     ayahHeader: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginBottom: 8,
+        marginBottom: SPACING.md,
     },
-    circle: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        borderWidth: 1,
-        borderColor: '#ddd',
+    ayahBadge: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: COLORS.primary,
         justifyContent: 'center',
         alignItems: 'center',
     },
     ayahNumber: {
-        fontSize: 12,
-        color: '#666',
+        fontSize: 14,
+        fontWeight: '700',
+        color: COLORS.white,
     },
     wordsRow: {
-        flexDirection: 'row-reverse', // Arabic R2L
+        flexDirection: 'row-reverse', // RTL for Arabic
         flexWrap: 'wrap',
-        gap: 8,
-        marginBottom: 12,
+        gap: SPACING.sm,
+        marginBottom: SPACING.md,
     },
     wordContainer: {
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: SPACING.sm,
     },
     arabicWord: {
-        fontSize: 24, // Large for readability
-        fontFamily: Platform.OS === 'ios' ? 'GeezaPro' : 'serif', // Simple fallback
-        marginBottom: 4,
+        fontSize: 28,
+        fontFamily: 'Amiri_400Regular',
+        color: COLORS.slate800,
+        marginBottom: SPACING.xs / 2,
     },
     translationWord: {
         fontSize: 10,
-        color: '#666',
+        color: COLORS.slate500,
+        textAlign: 'center',
     },
     fullTranslation: {
         fontSize: 14,
-        color: '#4b5563',
+        color: COLORS.slate600,
         fontStyle: 'italic',
-        marginTop: 8,
+        lineHeight: 22,
+        marginTop: SPACING.xs,
     },
 });

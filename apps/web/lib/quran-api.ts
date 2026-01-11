@@ -17,7 +17,7 @@ export async function getSurahs(): Promise<Surah[]> {
     });
 
     if (cached.length === 114) {
-        return cached.map((s) => ({
+        return cached.map((s: any) => ({
             number: s.number,
             name: s.name,
             englishName: s.englishName,
@@ -100,7 +100,7 @@ export async function getAyahs(surahNumber: number) {
     // But for safety, we might want to ensure it exists. 
     // For MVP, user flow is List -> Detail, so List would have cached Surahs.
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         for (const ayah of ayahsData) {
             const createdAyah = await tx.cachedAyah.create({
                 data: {

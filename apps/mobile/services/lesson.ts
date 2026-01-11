@@ -2,7 +2,7 @@ import { API_URL } from '../constants/api';
 
 export interface Exercise {
     id: string;
-    type: 'MCQ' | 'MATCH' | 'READ' | 'TAP';
+    type: 'MCQ' | 'MATCH' | 'FILL_BLANK' | 'TAP_WORD';
     content: any;
     difficulty: number;
 }

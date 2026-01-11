@@ -43,7 +43,7 @@ async function getAyahs(surahNumber: number) {
     console.log(`Saving ${ayahsData.length} ayahs to cache...`);
 
     // START TRANSACTION
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         for (const ayah of ayahsData) {
             console.log(`Saving Ayah ${ayah.number}...`);
             const createdAyah = await tx.cachedAyah.create({

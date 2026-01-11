@@ -12,8 +12,11 @@
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
+    "prettier": "^3.0.0",
     "turbo": "^2.0.0",
-    "typescript": "^5.0.0",
-    "prettier": "^3.0.0"
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "isexe": "^3.1.1"
   }
 }

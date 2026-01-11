@@ -14,10 +14,10 @@ export async function GET(
 
         const ayahs = await getAyahs(surahNumber);
         return NextResponse.json({ ayahs });
-    } catch (error) {
-        console.error("Error fetching surah details:", error);
+    } catch (e: any) {
+        console.error("Error in getSurahDetails:", e);
         return NextResponse.json(
-            { error: "Failed to fetch surah details" },
+            { error: `Failed to fetch surah details: ${e.message}` },
             { status: 500 }
         );
     }

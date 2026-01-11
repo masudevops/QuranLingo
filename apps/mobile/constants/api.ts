@@ -1,8 +1,4 @@
-import { Platform } from 'react-native';
+// Production Vercel URL
+const PROD_URL = 'https://quran-lingo-six.vercel.app';
 
-const LOCALHOST = Platform.select({
-    ios: 'http://localhost:3000',
-    android: 'http://10.0.2.2:3000',
-});
-
-export const API_URL = `${LOCALHOST}/api`;
+export const API_URL = `${PROD_URL}/api`;

@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         const lesson = firstCourse.units[0].lessons[0];
 
         // Transform exercises content from string back to JSON
-        const exercises = lesson.exercises.map(ex => ({
+        const exercises = lesson.exercises.map((ex: any) => ({
             ...ex,
             content: JSON.parse(ex.content)
         }));
